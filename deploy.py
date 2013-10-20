@@ -38,12 +38,11 @@ def static(name, wd, key='../keys/deploy', root='/var/www/'):
   deploy_dir = str(time.time())
 
   with lcd(wd):
-    local('git archive master | gzip > ' + tarball)
+    local('git archive-all --prefix="' + deploy_dir + '" ' + tarball)
     put(tarball)
     local('rm ' + tarball)
 
-  sudo('mkdir "' + app_dir + deploy_dir + '"')
-  sudo('cd "' + app_dir + deploy_dir + '" && tar -xzf /home/' + env.user + '/' + tarball)
+  sudo('cd "' + app_dir + '" && tar -xzf /home/' + env.user + '/' + tarball)
   sudo('rm -f "' + app_dir + 'current"')
   sudo('ln -s "' + app_dir + deploy_dir + '" "' + app_dir + 'current"')
 
