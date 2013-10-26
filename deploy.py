@@ -6,8 +6,9 @@ import time
 env.user = 'deploy'
 
 @task
-def puppet(working_directory, user='deploy'):
+def puppet(working_directory, user='deploy', key='../keys/deploy'):
   env.user = user
+  env.key_filename = key
 
   with lcd(working_directory):
     local('git archive master | gzip > puppet.tar.gz')
