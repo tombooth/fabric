@@ -2,6 +2,8 @@
 from fabric.api import *
 
 import deploy
+import deploy.jenkins
+import deploy.local
 
 @task
 def bootstrap(hostname):
