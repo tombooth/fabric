@@ -24,5 +24,5 @@ def bootstrap(hostname):
 
 @task
 def bootstrap_puppet(wd):
-  deploy.puppet(wd, 'root')
+  deploy.local.puppet(wd, 'root')
 

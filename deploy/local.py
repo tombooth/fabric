@@ -1,53 +1,46 @@
 
 from fabric.api import *
+from deploy.core import *
 
 import time
+import functools
 
-env.user = 'deploy'
-
-@task
-def puppet(working_directory, user='deploy', key='../keys/deploy'):
-  env.user = user
-  env.key_filename = key
-
-  with lcd(working_directory):
-    local('git archive master | gzip > puppet.tar.gz')
-    put('puppet.tar.gz')
-    local('rm puppet.tar.gz')
-
-  run('mkdir puppet')
-  
-  with cd('./puppet'):
-    run('tar -xzf ../puppet.tar.gz')
-    run('cp hiera.yaml hiera.yaml.orig')
-    run('sed "s/\/vagrant\///g" hiera.yaml.orig > hiera.yaml')
-    run('bundle install')
-    run('bundle exec librarian-puppet install')
-    sudo('bundle exec puppet apply --debug --verbose --summarize --reports store --hiera_config ./hiera.yaml --modulepath modules:vendor/modules --manifestdir manifests manifests/site.pp')
-
-  run('rm -rf puppet')
-
-
-@task
-def static(name, wd, key='../keys/deploy', root='/var/www/'):
-  env.key_filename = key
-  env.sudo_prompt = ''
-  env.sudo_prefix = 'sudo '
-
-  tarball = name + '.deploy.tar.gz'
-  app_dir = root + name + '/'
-  deploy_dir = str(time.time())
-
+def tarball_from_local(wd, name, prefix):
   with lcd(wd):
-    local('git archive-all --prefix="' + deploy_dir + '" ' + tarball)
-    put(tarball)
-    local('rm ' + tarball)
+    local('git archive-all --prefix="' + prefix + '" %s' % name)
+    put(name)
+    local('rm %s' % name)
+  
+@task
+def puppet(wd, user='deploy', key='../keys/deploy'):
+  wrap_deploy(
+    'puppet', user, key,
+    functools.partial(tarball_from_local, wd),
+    puppet_deploy
+  )
 
-  sudo('cd "' + app_dir + '" && tar -xzf /home/' + env.user + '/' + tarball)
-  sudo('rm -f "' + app_dir + 'current"')
-  sudo('ln -s "' + app_dir + deploy_dir + '" "' + app_dir + 'current"')
+@task
+def static(name, wd, user='deploy', key='../keys/deploy', root='/var/www/'):
+  app_dir = root + name + '/'
 
-  run('rm ~/' + tarball)
+  wrap_deploy(
+    str(time.time()), user, key,
+    functools.partial(tarball_from_local, wd),
+    functools.partial(deployable_deploy, app_dir)
+  )
+
+
+@task
+def app(name, wd, user='deploy', key='../keys/deploy', root='/var/app/'):
+  app_dir = root + name + '/'
+
+  wrap_deploy(
+    str(time.time()), user, key,
+    functools.partial(tarball_from_local, wd),
+    functools.partial(app_deploy, app_dir)
+  )
+
+
 
 
 
