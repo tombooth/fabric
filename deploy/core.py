@@ -43,8 +43,14 @@ def app_deploy(app_dir, tarball, prefix):
   descriptor_json = sudo('cat %sdescriptor.json' % app_dir)
   descriptor = json.loads(descriptor_json)
 
+  if len(descriptor['post_deploy']) > 0:
+    with cd('%scurrent' % app_dir):
+      for script in descriptor['post_deploy']:
+        sudo(script)
+
   if len(descriptor['services']) > 0:
     for service in descriptor['services']:
       with settings(warn_only=True):
         sudo('stop %s' % service)
         sudo('start %s' % service)
+
