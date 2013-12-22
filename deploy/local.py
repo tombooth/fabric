@@ -26,7 +26,7 @@ def static(name, wd, user='deploy', key='../keys/deploy', root='/var/www/'):
   wrap_deploy(
     str(time.time()), user, key,
     functools.partial(tarball_from_local, wd),
-    functools.partial(deployable_deploy, app_dir)
+    functools.partial(simple_deploy, app_dir)
   )
 
 

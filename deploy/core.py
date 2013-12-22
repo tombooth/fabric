@@ -31,22 +31,25 @@ def puppet_deploy(tarball, prefix):
   run('rm -rf %s' % prefix)
 
 
-def deployable_deploy(app_dir, tarball, prefix):
+def simple_deploy(app_dir, tarball, prefix):
   sudo('cd "%s" && tar -xzf /home/%s/%s' % (app_dir, env.user, tarball))
   sudo('rm -f "%scurrent"' % (app_dir))
   sudo('ln -s "%s%s" "%scurrent"' % (app_dir, prefix, app_dir))
 
 
 def app_deploy(app_dir, tarball, prefix):
-  deployable_deploy(app_dir, tarball, prefix)
+  sudo('cd "%s" && tar -xzf /home/%s/%s' % (app_dir, env.user, tarball))
 
   descriptor_json = sudo('cat %sdescriptor.json' % app_dir)
   descriptor = json.loads(descriptor_json)
 
   if len(descriptor['post_deploy']) > 0:
-    with cd('%scurrent' % app_dir):
+    with cd('%s%s' % (app_dir, prefix)):
       for script in descriptor['post_deploy']:
         sudo(script)
+
+  sudo('rm -f "%scurrent"' % (app_dir))
+  sudo('ln -s "%s%s" "%scurrent"' % (app_dir, prefix, app_dir))
 
   if len(descriptor['services']) > 0:
     for service in descriptor['services']:
