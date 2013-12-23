@@ -12,11 +12,11 @@ def tarball_from_local(wd, name, prefix):
     local('rm %s' % name)
   
 @task
-def puppet(wd, user='deploy', key='../keys/deploy'):
+def puppet(wd, environment_yaml = None, user='deploy', key='../keys/deploy'):
   wrap_deploy(
     'puppet', user, key,
     functools.partial(tarball_from_local, wd),
-    puppet_deploy
+    functools.partial(puppet_deploy, environment_yaml)
   )
 
 @task

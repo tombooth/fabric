@@ -23,6 +23,6 @@ def bootstrap(hostname):
   run('shutdown -r now')
 
 @task
-def bootstrap_puppet(wd):
-  deploy.local.puppet(wd, 'root')
+def bootstrap_puppet(wd, environment_yaml = None):
+  deploy.local.puppet(wd, environment_yaml, 'root')
 

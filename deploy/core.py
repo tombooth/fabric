@@ -18,12 +18,16 @@ def wrap_deploy(prefix, user, key, put_tarball, deploy):
   run('rm ~/%s' % tarball)
 
 
-def puppet_deploy(tarball, prefix):
+def puppet_deploy(environment_yaml, tarball, prefix):
   run('tar -xzf %s' % tarball)
 
   with cd('./%s' % prefix):
     run('cp hiera.yaml hiera.yaml.orig')
     run('sed "s/\/vagrant\///g" hiera.yaml.orig > hiera.yaml')
+
+    if environment_yaml is not None:
+        put(environment_yaml, './hieradata/environment.yaml')
+
     run('bundle install')
     run('bundle exec librarian-puppet install')
     sudo('bundle exec puppet apply --debug --verbose --summarize --reports store --hiera_config ./hiera.yaml --modulepath modules:vendor/modules --manifestdir manifests manifests/site.pp')
